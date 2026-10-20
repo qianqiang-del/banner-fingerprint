@@ -234,8 +234,18 @@ rules:
     os_pattern: ""
     confidence: 0.6
 
-  # ── MySQL ──────────────────────────────────────────────────────────────────
-  # Patterns match on the unescaped banner (J + 3 null bytes + newline + version)
+  # ── MySQL / MariaDB ────────────────────────────────────────────────────────
+  # MariaDB handshake is identical in structure to MySQL but version string
+  # contains "-MariaDB"; match it first so product is reported correctly.
+  - name: mariadb
+    protocol: MySQL
+    product: MariaDB
+    patterns:
+      - "^J\x00\x00\x00\n[0-9][^\x00]+-MariaDB"
+    version_pattern: "\x00\n([0-9][^-\x00]+-MariaDB[^\x00]*)"
+    os_pattern: ""
+    confidence: 0.9
+
   - name: mysql_generic
     protocol: MySQL
     product: MySQL

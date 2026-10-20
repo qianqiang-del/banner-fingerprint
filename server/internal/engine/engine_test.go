@@ -197,10 +197,11 @@ func TestFingerprint(t *testing.T) {
 			wantConfMin:      0.85,
 		},
 		{
-			name:             "MySQL escaped hex in JSON",
+			name:             "MariaDB banner",
 			input:            models.ScanInput{IP: "2.0.0.19", Port: 3306, Banner: "J\u0000\u0000\u0000\n5.5.68-MariaDB\u0000"},
 			wantProtocol:     "MySQL",
-			wantProduct:      "MySQL",
+			wantProduct:      "MariaDB",
+			wantVersionStart: "5.5.68",
 			wantConfMin:      0.85,
 		},
 
