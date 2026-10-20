@@ -91,6 +91,16 @@ func (e *Engine) Fingerprint(input models.ScanInput) models.FingerprintResult {
 	// Unescape common escape sequences so we can match binary banners.
 	banner := unescape(input.Banner)
 
+	// Byte-level pre-checks for protocols whose magic bytes are invalid UTF-8
+	// and therefore cannot be matched by Go's RE2 engine.
+	if len(banner) >= 2 && banner[0] == 0xff {
+		// Telnet IAC (0xff) negotiation sequence
+		return models.FingerprintResult{
+			IP: input.IP, Port: input.Port,
+			Protocol: "Telnet", Confidence: 0.7,
+		}
+	}
+
 	for _, r := range e.rules {
 		if matchesAny(r.compiled, banner) {
 			result.Protocol = r.Protocol

@@ -9,7 +9,7 @@ rules:
     protocol: SSH
     product: OpenSSH
     patterns:
-      - "SSH-[\\d.]+-OpenSSH_([\\d.p]+)\\s+Ubuntu"
+      - "SSH-[\\d.]+-OpenSSH_[\\d.p]+\\s+Ubuntu"
     version_pattern: "SSH-[\\d.]+-OpenSSH_([\\d.p]+)"
     os_pattern: "SSH-[\\d.]+-OpenSSH_[\\d.p]+\\s+(Ubuntu[^\\s]*)"
     confidence: 0.95
@@ -18,7 +18,7 @@ rules:
     protocol: SSH
     product: OpenSSH
     patterns:
-      - "SSH-[\\d.]+-OpenSSH_([\\d.p]+)\\s+Debian"
+      - "SSH-[\\d.]+-OpenSSH_[\\d.p]+\\s+Debian"
     version_pattern: "SSH-[\\d.]+-OpenSSH_([\\d.p]+)"
     os_pattern: "SSH-[\\d.]+-OpenSSH_[\\d.p]+\\s+(Debian[^\\s]*)"
     confidence: 0.95
@@ -41,14 +41,107 @@ rules:
     os_pattern: ""
     confidence: 0.75
 
+  # ── SMTP (must come before FTP because both start with "220 ") ─────────────
+  - name: postfix
+    protocol: SMTP
+    product: Postfix
+    patterns:
+      - "220.*Postfix"
+    version_pattern: ""
+    os_pattern: ""
+    confidence: 0.9
+
+  - name: exim
+    protocol: SMTP
+    product: Exim
+    patterns:
+      - "220.*Exim\\s+[\\d.]+"
+    version_pattern: "220.*Exim\\s+([\\d.]+)"
+    os_pattern: ""
+    confidence: 0.9
+
+  - name: sendmail
+    protocol: SMTP
+    product: Sendmail
+    patterns:
+      - "220.*Sendmail"
+    version_pattern: "220.*Sendmail\\s+([\\d./]+)"
+    os_pattern: ""
+    confidence: 0.85
+
+  - name: smtp_generic
+    protocol: SMTP
+    product: ""
+    patterns:
+      - "^220[- ].*ESMTP"
+    version_pattern: ""
+    os_pattern: ""
+    confidence: 0.6
+
+  # ── FTP ────────────────────────────────────────────────────────────────────
+  - name: proftpd
+    protocol: FTP
+    product: ProFTPD
+    patterns:
+      - "220.*ProFTPD\\s+[\\d.]+"
+    version_pattern: "220.*ProFTPD\\s+([\\d.]+)"
+    os_pattern: ""
+    confidence: 0.9
+
+  - name: vsftpd
+    protocol: FTP
+    product: vsFTPd
+    patterns:
+      - "220.*vsFTPd\\s+[\\d.]+"
+    version_pattern: "220.*vsFTPd\\s+([\\d.]+)"
+    os_pattern: ""
+    confidence: 0.9
+
+  - name: pureftpd
+    protocol: FTP
+    product: Pure-FTPd
+    patterns:
+      - "220.*Pure-FTPd"
+    version_pattern: ""
+    os_pattern: ""
+    confidence: 0.85
+
+  - name: filezilla_ftp
+    protocol: FTP
+    product: FileZilla
+    patterns:
+      - "220.*FileZilla"
+    version_pattern: "220.*FileZilla\\s+Server\\s+([\\d.]+)"
+    os_pattern: ""
+    confidence: 0.85
+
+  - name: ftp_generic
+    protocol: FTP
+    product: ""
+    patterns:
+      - "^220[- ]"
+    version_pattern: ""
+    os_pattern: ""
+    confidence: 0.65
+
   # ── HTTP / Web servers ─────────────────────────────────────────────────────
+  # Elasticsearch: match BEFORE http_generic since banner starts with HTTP/
+  - name: elasticsearch
+    protocol: HTTP
+    product: Elasticsearch
+    patterns:
+      - "\"tagline\"\\s*:\\s*\"You Know, for Search\""
+    version_pattern: "\"number\"\\s*:\\s*\"([\\d.]+)\""
+    os_pattern: ""
+    confidence: 0.95
+
   - name: nginx_ubuntu
     protocol: HTTP
     product: nginx
     patterns:
-      - "Server:\\s*nginx/([\\d.]+)\\s*\\(Ubuntu\\)"
+      - "Server:\\s*nginx/[\\d.]+\\s*\\(Ubuntu"
     version_pattern: "Server:\\s*nginx/([\\d.]+)"
-    os_pattern: "Server:\\s*nginx/[\\d.]+\\s*\\((Ubuntu[^)]+)\\)"
+    os_pattern: "Server:\\s*nginx/[\\d.]+\\s*\\((Ubuntu[^)]*)"
     confidence: 0.95
 
   - name: nginx_generic
@@ -64,9 +157,18 @@ rules:
     protocol: HTTP
     product: Apache
     patterns:
-      - "Server:\\s*Apache/([\\d.]+)\\s*\\(Ubuntu\\)"
+      - "Server:\\s*Apache/[\\d.]+\\s*\\(Ubuntu"
     version_pattern: "Server:\\s*Apache/([\\d.]+)"
-    os_pattern: "Server:\\s*Apache/[\\d.]+\\s*\\((Ubuntu[^)]+)\\)"
+    os_pattern: "Server:\\s*Apache/[\\d.]+\\s*\\((Ubuntu[^)]*)"
+    confidence: 0.95
+
+  - name: apache_debian
+    protocol: HTTP
+    product: Apache
+    patterns:
+      - "Server:\\s*Apache/[\\d.]+\\s*\\(Debian"
+    version_pattern: "Server:\\s*Apache/([\\d.]+)"
+    os_pattern: "Server:\\s*Apache/[\\d.]+\\s*\\((Debian[^)]*)"
     confidence: 0.95
 
   - name: apache_generic
@@ -133,32 +235,15 @@ rules:
     confidence: 0.6
 
   # ── MySQL ──────────────────────────────────────────────────────────────────
-  - name: mysql8
-    protocol: MySQL
-    product: MySQL
-    patterns:
-      - "\\x00\\n8\\."
-    version_pattern: "\\x00\\n([\\d.]+)"
-    os_pattern: ""
-    confidence: 0.9
-
-  - name: mysql57
-    protocol: MySQL
-    product: MySQL
-    patterns:
-      - "\\x00\\n5\\."
-    version_pattern: "\\x00\\n([\\d.]+)"
-    os_pattern: ""
-    confidence: 0.9
-
+  # Patterns match on the unescaped banner (J + 3 null bytes + newline + version)
   - name: mysql_generic
     protocol: MySQL
     product: MySQL
     patterns:
-      - "^J\\x00\\x00\\x00\\n"
-    version_pattern: "\\x00\\n([0-9][^\\x00]+)"
+      - "^J\x00\x00\x00\n"
+    version_pattern: "\x00\n([0-9][^\x00]+)"
     os_pattern: ""
-    confidence: 0.85
+    confidence: 0.9
 
   # ── Redis ──────────────────────────────────────────────────────────────────
   - name: redis_pong
@@ -197,89 +282,6 @@ rules:
     os_pattern: ""
     confidence: 0.9
 
-  # ── FTP ────────────────────────────────────────────────────────────────────
-  - name: proftpd
-    protocol: FTP
-    product: ProFTPD
-    patterns:
-      - "220.*ProFTPD\\s+([\\d.]+)"
-    version_pattern: "220.*ProFTPD\\s+([\\d.]+)"
-    os_pattern: ""
-    confidence: 0.9
-
-  - name: vsftpd
-    protocol: FTP
-    product: vsFTPd
-    patterns:
-      - "220.*vsFTPd\\s+([\\d.]+)"
-    version_pattern: "220.*vsFTPd\\s+([\\d.]+)"
-    os_pattern: ""
-    confidence: 0.9
-
-  - name: pureftpd
-    protocol: FTP
-    product: Pure-FTPd
-    patterns:
-      - "220.*Pure-FTPd"
-    version_pattern: ""
-    os_pattern: ""
-    confidence: 0.85
-
-  - name: filezilla_ftp
-    protocol: FTP
-    product: FileZilla
-    patterns:
-      - "220.*FileZilla"
-    version_pattern: "220.*FileZilla\\s+Server\\s+([\\d.]+)"
-    os_pattern: ""
-    confidence: 0.85
-
-  - name: ftp_generic
-    protocol: FTP
-    product: ""
-    patterns:
-      - "^220[- ]"
-    version_pattern: ""
-    os_pattern: ""
-    confidence: 0.65
-
-  # ── SMTP ───────────────────────────────────────────────────────────────────
-  - name: postfix
-    protocol: SMTP
-    product: Postfix
-    patterns:
-      - "220.*Postfix"
-    version_pattern: ""
-    os_pattern: ""
-    confidence: 0.9
-
-  - name: exim
-    protocol: SMTP
-    product: Exim
-    patterns:
-      - "220.*Exim\\s+([\\d.]+)"
-    version_pattern: "220.*Exim\\s+([\\d.]+)"
-    os_pattern: ""
-    confidence: 0.9
-
-  - name: sendmail
-    protocol: SMTP
-    product: Sendmail
-    patterns:
-      - "220.*Sendmail"
-    version_pattern: "220.*Sendmail\\s+([\\d./]+)"
-    os_pattern: ""
-    confidence: 0.85
-
-  - name: smtp_generic
-    protocol: SMTP
-    product: ""
-    patterns:
-      - "^220[- ].*SMTP"
-    version_pattern: ""
-    os_pattern: ""
-    confidence: 0.6
-
   # ── PostgreSQL ─────────────────────────────────────────────────────────────
   - name: postgresql
     protocol: PostgreSQL
@@ -291,31 +293,22 @@ rules:
     confidence: 0.85
 
   # ── MongoDB ────────────────────────────────────────────────────────────────
+  # Match on wire-protocol keywords that appear in the greeting document
   - name: mongodb
     protocol: MongoDB
     product: MongoDB
     patterns:
-      - "MongoDB"
-    version_pattern: "\"version\":\\s*\"([\\d.]+)\""
+      - "ismaster|isMaster|maxBsonObjectSize|isWritablePrimary"
+    version_pattern: "\"version\"\\s*:\\s*\"([\\d.]+)\""
     os_pattern: ""
     confidence: 0.85
-
-  # ── Elasticsearch ──────────────────────────────────────────────────────────
-  - name: elasticsearch
-    protocol: HTTP
-    product: Elasticsearch
-    patterns:
-      - "\"tagline\"\\s*:\\s*\"You Know, for Search\""
-    version_pattern: "\"number\"\\s*:\\s*\"([\\d.]+)\""
-    os_pattern: ""
-    confidence: 0.95
 
   # ── TLS/SSL handshake ──────────────────────────────────────────────────────
   - name: tls_handshake
     protocol: TLS
     product: ""
     patterns:
-      - "^\\x16\\x03"
+      - "^\x16\x03"
     version_pattern: ""
     os_pattern: ""
     confidence: 0.8
@@ -325,7 +318,7 @@ rules:
     protocol: RDP
     product: Microsoft RDP
     patterns:
-      - "^\\x03\\x00"
+      - "^\x03\x00"
     version_pattern: ""
     os_pattern: "Windows"
     confidence: 0.75
@@ -345,7 +338,7 @@ rules:
     protocol: MQTT
     product: ""
     patterns:
-      - "^\\x20\\x02"
+      - "^\x20\x02"
     version_pattern: ""
     os_pattern: ""
     confidence: 0.75
@@ -361,11 +354,12 @@ rules:
     confidence: 0.9
 
   # ── Telnet ─────────────────────────────────────────────────────────────────
+  # Telnet IAC (0xff) sequences — match on the literal byte value
   - name: telnet
     protocol: Telnet
     product: ""
     patterns:
-      - "^\\xff[\\xfb-\\xfe]"
+      - "^\xff"
     version_pattern: ""
     os_pattern: ""
     confidence: 0.7
