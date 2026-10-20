@@ -1,0 +1,371 @@
+# Banner fingerprint rules
+# Each rule is evaluated in order; first match wins.
+# Fields: name, protocol, product, patterns (list of regex on banner),
+#         version_pattern (capture group 1 = version),
+#         os_pattern (capture group 1 = os_hint), confidence
+rules:
+  # ── SSH ────────────────────────────────────────────────────────────────────
+  - name: openssh_ubuntu
+    protocol: SSH
+    product: OpenSSH
+    patterns:
+      - "SSH-[\\d.]+-OpenSSH_([\\d.p]+)\\s+Ubuntu"
+    version_pattern: "SSH-[\\d.]+-OpenSSH_([\\d.p]+)"
+    os_pattern: "SSH-[\\d.]+-OpenSSH_[\\d.p]+\\s+(Ubuntu[^\\s]*)"
+    confidence: 0.95
+
+  - name: openssh_debian
+    protocol: SSH
+    product: OpenSSH
+    patterns:
+      - "SSH-[\\d.]+-OpenSSH_([\\d.p]+)\\s+Debian"
+    version_pattern: "SSH-[\\d.]+-OpenSSH_([\\d.p]+)"
+    os_pattern: "SSH-[\\d.]+-OpenSSH_[\\d.p]+\\s+(Debian[^\\s]*)"
+    confidence: 0.95
+
+  - name: openssh_generic
+    protocol: SSH
+    product: OpenSSH
+    patterns:
+      - "SSH-[\\d.]+-OpenSSH_"
+    version_pattern: "SSH-[\\d.]+-OpenSSH_([\\d.p]+)"
+    os_pattern: ""
+    confidence: 0.9
+
+  - name: ssh_generic
+    protocol: SSH
+    product: ""
+    patterns:
+      - "^SSH-"
+    version_pattern: "^SSH-([\\d.]+)-"
+    os_pattern: ""
+    confidence: 0.75
+
+  # ── HTTP / Web servers ─────────────────────────────────────────────────────
+  - name: nginx_ubuntu
+    protocol: HTTP
+    product: nginx
+    patterns:
+      - "Server:\\s*nginx/([\\d.]+)\\s*\\(Ubuntu\\)"
+    version_pattern: "Server:\\s*nginx/([\\d.]+)"
+    os_pattern: "Server:\\s*nginx/[\\d.]+\\s*\\((Ubuntu[^)]+)\\)"
+    confidence: 0.95
+
+  - name: nginx_generic
+    protocol: HTTP
+    product: nginx
+    patterns:
+      - "Server:\\s*nginx/"
+    version_pattern: "Server:\\s*nginx/([\\d.]+)"
+    os_pattern: "Server:\\s*nginx/[\\d.]+\\s*\\(([^)]+)\\)"
+    confidence: 0.9
+
+  - name: apache_ubuntu
+    protocol: HTTP
+    product: Apache
+    patterns:
+      - "Server:\\s*Apache/([\\d.]+)\\s*\\(Ubuntu\\)"
+    version_pattern: "Server:\\s*Apache/([\\d.]+)"
+    os_pattern: "Server:\\s*Apache/[\\d.]+\\s*\\((Ubuntu[^)]+)\\)"
+    confidence: 0.95
+
+  - name: apache_generic
+    protocol: HTTP
+    product: Apache
+    patterns:
+      - "Server:\\s*Apache/"
+    version_pattern: "Server:\\s*Apache/([\\d.]+)"
+    os_pattern: "Server:\\s*Apache/[\\d.]+\\s*\\(([^)]+)\\)"
+    confidence: 0.9
+
+  - name: jetty
+    protocol: HTTP
+    product: Jetty
+    patterns:
+      - "Server:\\s*Jetty/"
+    version_pattern: "Server:\\s*Jetty/([\\d.]+)"
+    os_pattern: ""
+    confidence: 0.85
+
+  - name: iis
+    protocol: HTTP
+    product: Microsoft-IIS
+    patterns:
+      - "Server:\\s*Microsoft-IIS/"
+    version_pattern: "Server:\\s*Microsoft-IIS/([\\d.]+)"
+    os_pattern: "Windows"
+    confidence: 0.9
+
+  - name: tomcat
+    protocol: HTTP
+    product: Apache Tomcat
+    patterns:
+      - "Server:\\s*Apache-Coyote/"
+    version_pattern: "Server:\\s*Apache-Coyote/([\\d.]+)"
+    os_pattern: ""
+    confidence: 0.85
+
+  - name: lighttpd
+    protocol: HTTP
+    product: lighttpd
+    patterns:
+      - "Server:\\s*lighttpd/"
+    version_pattern: "Server:\\s*lighttpd/([\\d.]+)"
+    os_pattern: ""
+    confidence: 0.9
+
+  - name: caddy
+    protocol: HTTP
+    product: Caddy
+    patterns:
+      - "Server:\\s*Caddy"
+    version_pattern: ""
+    os_pattern: ""
+    confidence: 0.85
+
+  - name: http_generic
+    protocol: HTTP
+    product: ""
+    patterns:
+      - "^HTTP/"
+    version_pattern: ""
+    os_pattern: ""
+    confidence: 0.6
+
+  # ── MySQL ──────────────────────────────────────────────────────────────────
+  - name: mysql8
+    protocol: MySQL
+    product: MySQL
+    patterns:
+      - "\\x00\\n8\\."
+    version_pattern: "\\x00\\n([\\d.]+)"
+    os_pattern: ""
+    confidence: 0.9
+
+  - name: mysql57
+    protocol: MySQL
+    product: MySQL
+    patterns:
+      - "\\x00\\n5\\."
+    version_pattern: "\\x00\\n([\\d.]+)"
+    os_pattern: ""
+    confidence: 0.9
+
+  - name: mysql_generic
+    protocol: MySQL
+    product: MySQL
+    patterns:
+      - "^J\\x00\\x00\\x00\\n"
+    version_pattern: "\\x00\\n([0-9][^\\x00]+)"
+    os_pattern: ""
+    confidence: 0.85
+
+  # ── Redis ──────────────────────────────────────────────────────────────────
+  - name: redis_pong
+    protocol: Redis
+    product: Redis
+    patterns:
+      - "^\\+PONG"
+    version_pattern: ""
+    os_pattern: ""
+    confidence: 0.9
+
+  - name: redis_err
+    protocol: Redis
+    product: Redis
+    patterns:
+      - "^-ERR.*(?:wrong number|unknown command)"
+    version_pattern: ""
+    os_pattern: ""
+    confidence: 0.7
+
+  - name: redis_noauth
+    protocol: Redis
+    product: Redis
+    patterns:
+      - "^-NOAUTH"
+    version_pattern: ""
+    os_pattern: ""
+    confidence: 0.9
+
+  - name: redis_wrongpass
+    protocol: Redis
+    product: Redis
+    patterns:
+      - "^-WRONGPASS"
+    version_pattern: ""
+    os_pattern: ""
+    confidence: 0.9
+
+  # ── FTP ────────────────────────────────────────────────────────────────────
+  - name: proftpd
+    protocol: FTP
+    product: ProFTPD
+    patterns:
+      - "220.*ProFTPD\\s+([\\d.]+)"
+    version_pattern: "220.*ProFTPD\\s+([\\d.]+)"
+    os_pattern: ""
+    confidence: 0.9
+
+  - name: vsftpd
+    protocol: FTP
+    product: vsFTPd
+    patterns:
+      - "220.*vsFTPd\\s+([\\d.]+)"
+    version_pattern: "220.*vsFTPd\\s+([\\d.]+)"
+    os_pattern: ""
+    confidence: 0.9
+
+  - name: pureftpd
+    protocol: FTP
+    product: Pure-FTPd
+    patterns:
+      - "220.*Pure-FTPd"
+    version_pattern: ""
+    os_pattern: ""
+    confidence: 0.85
+
+  - name: filezilla_ftp
+    protocol: FTP
+    product: FileZilla
+    patterns:
+      - "220.*FileZilla"
+    version_pattern: "220.*FileZilla\\s+Server\\s+([\\d.]+)"
+    os_pattern: ""
+    confidence: 0.85
+
+  - name: ftp_generic
+    protocol: FTP
+    product: ""
+    patterns:
+      - "^220[- ]"
+    version_pattern: ""
+    os_pattern: ""
+    confidence: 0.65
+
+  # ── SMTP ───────────────────────────────────────────────────────────────────
+  - name: postfix
+    protocol: SMTP
+    product: Postfix
+    patterns:
+      - "220.*Postfix"
+    version_pattern: ""
+    os_pattern: ""
+    confidence: 0.9
+
+  - name: exim
+    protocol: SMTP
+    product: Exim
+    patterns:
+      - "220.*Exim\\s+([\\d.]+)"
+    version_pattern: "220.*Exim\\s+([\\d.]+)"
+    os_pattern: ""
+    confidence: 0.9
+
+  - name: sendmail
+    protocol: SMTP
+    product: Sendmail
+    patterns:
+      - "220.*Sendmail"
+    version_pattern: "220.*Sendmail\\s+([\\d./]+)"
+    os_pattern: ""
+    confidence: 0.85
+
+  - name: smtp_generic
+    protocol: SMTP
+    product: ""
+    patterns:
+      - "^220[- ].*SMTP"
+    version_pattern: ""
+    os_pattern: ""
+    confidence: 0.6
+
+  # ── PostgreSQL ─────────────────────────────────────────────────────────────
+  - name: postgresql
+    protocol: PostgreSQL
+    product: PostgreSQL
+    patterns:
+      - "PostgreSQL"
+    version_pattern: "PostgreSQL\\s+([\\d.]+)"
+    os_pattern: ""
+    confidence: 0.85
+
+  # ── MongoDB ────────────────────────────────────────────────────────────────
+  - name: mongodb
+    protocol: MongoDB
+    product: MongoDB
+    patterns:
+      - "MongoDB"
+    version_pattern: "\"version\":\\s*\"([\\d.]+)\""
+    os_pattern: ""
+    confidence: 0.85
+
+  # ── Elasticsearch ──────────────────────────────────────────────────────────
+  - name: elasticsearch
+    protocol: HTTP
+    product: Elasticsearch
+    patterns:
+      - "\"tagline\"\\s*:\\s*\"You Know, for Search\""
+    version_pattern: "\"number\"\\s*:\\s*\"([\\d.]+)\""
+    os_pattern: ""
+    confidence: 0.95
+
+  # ── TLS/SSL handshake ──────────────────────────────────────────────────────
+  - name: tls_handshake
+    protocol: TLS
+    product: ""
+    patterns:
+      - "^\\x16\\x03"
+    version_pattern: ""
+    os_pattern: ""
+    confidence: 0.8
+
+  # ── RDP ────────────────────────────────────────────────────────────────────
+  - name: rdp
+    protocol: RDP
+    product: Microsoft RDP
+    patterns:
+      - "^\\x03\\x00"
+    version_pattern: ""
+    os_pattern: "Windows"
+    confidence: 0.75
+
+  # ── Memcached ──────────────────────────────────────────────────────────────
+  - name: memcached
+    protocol: Memcached
+    product: Memcached
+    patterns:
+      - "^(STORED|NOT_STORED|EXISTS|NOT_FOUND|END|VALUE|STAT|VERSION|ERROR|CLIENT_ERROR|SERVER_ERROR)"
+    version_pattern: "VERSION\\s+([\\d.]+)"
+    os_pattern: ""
+    confidence: 0.8
+
+  # ── MQTT ───────────────────────────────────────────────────────────────────
+  - name: mqtt
+    protocol: MQTT
+    product: ""
+    patterns:
+      - "^\\x20\\x02"
+    version_pattern: ""
+    os_pattern: ""
+    confidence: 0.75
+
+  # ── VNC ────────────────────────────────────────────────────────────────────
+  - name: vnc
+    protocol: VNC
+    product: ""
+    patterns:
+      - "^RFB\\s+[\\d.]+"
+    version_pattern: "^RFB\\s+([\\d.]+)"
+    os_pattern: ""
+    confidence: 0.9
+
+  # ── Telnet ─────────────────────────────────────────────────────────────────
+  - name: telnet
+    protocol: Telnet
+    product: ""
+    patterns:
+      - "^\\xff[\\xfb-\\xfe]"
+    version_pattern: ""
+    os_pattern: ""
+    confidence: 0.7
